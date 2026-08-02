@@ -1,9 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ArrowRight, CalendarClock, FileText, LockKeyhole, MapPin, Paperclip, Send, Trash2, TriangleAlert } from "lucide-react"
+import { ArrowLeft, ArrowRight, CalendarClock, FileText, LockKeyhole, MapPin, Paperclip, Send, ShieldCheck, Trash2, TriangleAlert, X } from "lucide-react"
 import { acceptedFileExtensions, completionPercent, validateClientFiles, validateClientStep } from "@/lib/form-client-rules.mjs"
 import { resolveNrepFormAccent } from "@/lib/nrep-theme.mjs"
 
@@ -93,6 +93,61 @@ function AdministrativeLocationControl({ formSlug, field, value, error, disabled
   return <div className={`location-control${error ? " location-control--error" : ""}`}><div className="location-control__heading"><MapPin size={16} /><span>Select each available administrative level</span>{loading && <span className="spinner" />}</div><div className="location-grid">{levels.map((level, index) => <label key={`${level.level}-${index}`}><span>{level.label}</span><select className="select" value={path[index]?.code || ""} disabled={disabled || loading} onChange={(event) => selectLevel(index, event.target.value)}><option value="">Select {level.label.toLocaleLowerCase()}</option>{level.options.map((item) => <option value={item.code} key={item.code}>{item.name}</option>)}</select></label>)}</div>{loadError && <p className="field-error">{loadError}</p>}</div>
 }
 
+function ConsentAcceptance({ title, text, version, required, checked, error, disabled, onChange }) {
+  const identifier = useId().replace(/:/g, "")
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const closeButtonRef = useRef(null)
+  const checkboxId = `consent-checkbox-${identifier}`
+  const dialogTitleId = `consent-dialog-title-${identifier}`
+  const dialogDescriptionId = `consent-dialog-description-${identifier}`
+  const errorId = `consent-error-${identifier}`
+
+  useEffect(() => {
+    if (!detailsOpen) return undefined
+    const previousFocus = document.activeElement
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setDetailsOpen(false)
+    }
+    document.body.style.overflow = "hidden"
+    document.addEventListener("keydown", closeOnEscape)
+    closeButtonRef.current?.focus()
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener("keydown", closeOnEscape)
+      if (previousFocus instanceof HTMLElement) previousFocus.focus()
+    }
+  }, [detailsOpen])
+
+  return (
+    <div className={`consent-box${error ? " consent-box--error" : ""}`}>
+      <div className="consent-box__heading">
+        <span className="consent-box__icon"><ShieldCheck size={18} /></span>
+        <div><h3>{title}</h3><p>Review the consent information before confirming your acceptance.</p></div>
+      </div>
+      <button className="consent-details-button" type="button" disabled={disabled} aria-haspopup="dialog" onClick={() => setDetailsOpen(true)}><FileText size={15} /> Read consent details</button>
+      <label className="choice consent-choice" htmlFor={checkboxId}>
+        <input id={checkboxId} type="checkbox" checked={checked} disabled={disabled} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} onChange={(event) => onChange(event.target.checked)} />
+        <span>I have read and agree to <strong>{title}</strong>{required && <span className="required"> *</span>}</span>
+      </label>
+      {error && <p className="field-error" id={errorId} role="alert">{error}</p>}
+
+      {detailsOpen && (
+        <div className="consent-modal-backdrop">
+          <section className="consent-modal" role="dialog" aria-modal="true" aria-labelledby={dialogTitleId} aria-describedby={dialogDescriptionId}>
+            <div className="consent-modal__header">
+              <div><span>{version ? `Consent version ${version}` : "Consent details"}</span><h2 id={dialogTitleId}>{title}</h2></div>
+              <button ref={closeButtonRef} type="button" title="Close consent details" aria-label="Close consent details" onClick={() => setDetailsOpen(false)}><X size={19} /></button>
+            </div>
+            <div className="consent-modal__body" id={dialogDescriptionId}>{text || "No additional consent wording was provided."}</div>
+            <div className="consent-modal__footer"><button className="button button--primary" type="button" onClick={() => setDetailsOpen(false)}>Close and return to form</button></div>
+          </section>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function FieldControl({ formSlug, field, value, files, error, disabled, onChange, onFilesChange }) {
   const errorClass = error ? " input--error" : ""
   if (field.type === "information") return <div className="information">{field.description || field.label}</div>
@@ -104,7 +159,7 @@ function FieldControl({ formSlug, field, value, files, error, disabled, onChange
   }
   if (field.type === "dropdown") return <select className={`select${errorClass}`} value={value || ""} disabled={disabled} onChange={(event) => onChange(event.target.value)} aria-invalid={Boolean(error)}><option value="">Select an option</option>{field.options.map((option) => <option key={option.id || option.value} value={option.value}>{option.label}</option>)}</select>
   if (field.type === "yes_no") return <div className="choice-list"><label className="choice"><input type="radio" name={field.id} checked={value === true} disabled={disabled} onChange={() => onChange(true)} /> Yes</label><label className="choice"><input type="radio" name={field.id} checked={value === false} disabled={disabled} onChange={() => onChange(false)} /> No</label></div>
-  if (field.type === "consent") return <label className="choice"><input type="checkbox" checked={value === true} disabled={disabled} onChange={(event) => onChange(event.target.checked)} /><span>{field.consentText || field.description || "I agree"}</span></label>
+  if (field.type === "consent") return <ConsentAcceptance title={field.label || "Consent"} text={field.consentText || field.description || "I agree"} required={field.required} checked={value === true} error={error} disabled={disabled} onChange={onChange} />
   if (field.type === "rating") return <div className="rating">{Array.from({ length: field.ratingMax || 5 }, (_, index) => <button type="button" key={index} aria-pressed={Number(value) === index + 1} disabled={disabled} onClick={() => onChange(index + 1)}>{index + 1}</button>)}</div>
   if (field.type === "file_upload") return <FileUploadControl field={field} files={files} error={error} disabled={disabled} onChange={onFilesChange} />
   if (field.type === "administrative_location") return <AdministrativeLocationControl formSlug={formSlug} field={field} value={value} error={error} disabled={disabled} onChange={onChange} />
@@ -315,10 +370,10 @@ export default function FormRunner({ form }) {
           <section>
             {(form.layout === "steps" || steps.length > 1) && <h2 className="step-title">{currentStep.title}</h2>}
             {currentStep.description && <p className="step-description">{currentStep.description}</p>}
-            {currentStep.fields.map((field) => <div className="field" key={field.id}>{field.type !== "information" && <label className="field-label">{field.label} {field.required && <span className="required">*</span>}</label>}{field.description && !["information", "consent"].includes(field.type) && <p className="field-help">{field.description}</p>}<FieldControl formSlug={form.slug} field={field} value={answers[field.id]} files={fileSelections[field.id]} error={errors[field.id]} disabled={submitting} onChange={(value) => setAnswer(field.id, value)} onFilesChange={(files) => setFiles(field, files)} />{errors[field.id] && <p className="field-error">{errors[field.id]}</p>}</div>)}
+            {currentStep.fields.map((field) => <div className="field" key={field.id}>{!["information", "consent"].includes(field.type) && <label className="field-label">{field.label} {field.required && <span className="required">*</span>}</label>}{field.description && !["information", "consent"].includes(field.type) && <p className="field-help">{field.description}</p>}<FieldControl formSlug={form.slug} field={field} value={answers[field.id]} files={fileSelections[field.id]} error={errors[field.id]} disabled={submitting} onChange={(value) => setAnswer(field.id, value)} onFilesChange={(files) => setFiles(field, files)} />{errors[field.id] && field.type !== "consent" && <p className="field-error">{errors[field.id]}</p>}</div>)}
           </section>
-          {finalStep && form.generalConsent && <div className="field consent-box"><h3>{form.generalConsent.title}</h3><p>{form.generalConsent.text}</p><label className="choice"><input type="checkbox" checked={consents.general} onChange={(event) => { setConsents((current) => ({ ...current, general: event.target.checked })); setErrors((current) => ({ ...current, generalConsent: undefined })) }} /><span>I accept this consent statement {form.generalConsent.required && <span className="required">*</span>}</span></label>{errors.generalConsent && <p className="field-error">{errors.generalConsent}</p>}</div>}
-          {finalStep && form.formConsent && <div className="field consent-box"><h3>{form.formConsent.title}</h3><p>{form.formConsent.text}</p><label className="choice"><input type="checkbox" checked={consents.form} onChange={(event) => { setConsents((current) => ({ ...current, form: event.target.checked })); setErrors((current) => ({ ...current, formConsent: undefined })) }} /><span>I accept this consent statement {form.formConsent.required && <span className="required">*</span>}</span></label>{errors.formConsent && <p className="field-error">{errors.formConsent}</p>}</div>}
+          {finalStep && form.generalConsent && <div className="field"><ConsentAcceptance title={form.generalConsent.title} text={form.generalConsent.text} version={form.generalConsent.version} required={form.generalConsent.required} checked={consents.general} error={errors.generalConsent} disabled={submitting} onChange={(checked) => { setConsents((current) => ({ ...current, general: checked })); setErrors((current) => ({ ...current, generalConsent: undefined })) }} /></div>}
+          {finalStep && form.formConsent && <div className="field"><ConsentAcceptance title={form.formConsent.title} text={form.formConsent.text} version={form.formConsent.version} required={form.formConsent.required} checked={consents.form} error={errors.formConsent} disabled={submitting} onChange={(checked) => { setConsents((current) => ({ ...current, form: checked })); setErrors((current) => ({ ...current, formConsent: undefined })) }} /></div>}
           <div className="honeypot" aria-hidden="true"><label>Website<input tabIndex="-1" autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></label></div>
         </div>
         <div className="form-footer">

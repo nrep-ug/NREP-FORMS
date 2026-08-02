@@ -5,3 +5,4 @@
 npm-debug.log*
 pnpm-debug.log*
 .forms-public-*.log
+ecosystem.config.js

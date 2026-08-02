@@ -1,13 +1,20 @@
 :root {
+  --nrep-primary: #176F91;
+  --nrep-primary-light: #2E9ECC;
+  --nrep-primary-dark: #0B5E78;
+  --nrep-secondary: #EFA74F;
+  --nrep-secondary-light: #F5C078;
+  --nrep-secondary-dark: #B45309;
   --ink: #172d35;
-  --muted: #64757c;
-  --line: #d5e0e3;
+  --muted: #5f727b;
+  --line: #d3dfe4;
   --surface: #ffffff;
-  --canvas: #f3f7f8;
-  --accent: #087f8c;
-  --accent-dark: #066873;
+  --canvas: #f3f6f8;
+  --accent: var(--nrep-primary);
+  --accent-light: var(--nrep-primary-light);
+  --accent-dark: var(--nrep-primary-dark);
   --success: #167550;
-  --warning: #d99a27;
+  --warning: var(--nrep-secondary-dark);
   --danger: #b9384d;
   color-scheme: light;
 }
@@ -36,6 +43,7 @@ a { -webkit-tap-highlight-color: transparent; }
   position: sticky;
   z-index: 50;
   top: 0;
+  border-top: 3px solid var(--nrep-secondary);
   border-bottom: 1px solid var(--line);
   background: rgba(255, 255, 255, .97);
   backdrop-filter: blur(8px);
@@ -74,6 +82,7 @@ a { -webkit-tap-highlight-color: transparent; }
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
+  box-shadow: inset 0 -4px 0 var(--nrep-secondary);
 }
 
 .brand strong,
@@ -85,7 +94,7 @@ a { -webkit-tap-highlight-color: transparent; }
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--success);
+  color: var(--accent-dark);
   font-size: 12px;
   font-weight: 800;
 }
@@ -115,28 +124,13 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 
 .home-heading {
-  position: relative;
-  overflow: hidden;
-  border-bottom: 5px solid var(--warning);
+  border-bottom: 5px solid var(--nrep-secondary);
   padding: 30px;
-  background: #0d5964;
+  background: var(--nrep-primary-dark);
   color: #fff;
 }
 
-.home-heading::after {
-  content: "";
-  position: absolute;
-  right: -45px;
-  bottom: -70px;
-  width: 210px;
-  height: 180px;
-  border: 28px solid rgba(255, 255, 255, .1);
-  border-radius: 50%;
-}
-
 .home-heading h1 {
-  position: relative;
-  z-index: 1;
   margin: 0;
   font-size: clamp(28px, 4vw, 44px);
   line-height: 1.1;
@@ -144,11 +138,9 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 
 .home-heading p {
-  position: relative;
-  z-index: 1;
   max-width: 700px;
   margin: 9px 0 0;
-  color: #d9eef1;
+  color: #e8f4f8;
   font-size: 15px;
   line-height: 1.55;
 }
@@ -221,8 +213,8 @@ a { -webkit-tap-highlight-color: transparent; }
 
 .button:hover:not(:disabled) { border-color: #789099; background: #f8fafb; }
 .button:disabled { cursor: not-allowed; opacity: .58; }
-.button--primary { border-color: var(--form-accent, var(--accent)); background: var(--form-accent, var(--accent)); color: #fff; }
-.button--primary:hover:not(:disabled) { border-color: var(--accent-dark); background: var(--accent-dark); }
+.button--primary { border-color: var(--nrep-primary); background: var(--nrep-primary); color: #fff; }
+.button--primary:hover:not(:disabled) { border-color: var(--nrep-primary-dark); background: var(--nrep-primary-dark); }
 
 .forms-list {
   display: grid;
@@ -266,7 +258,7 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 
 .form-shell {
-  --form-accent: #087f8c;
+  --form-accent: var(--nrep-primary);
   overflow: hidden;
   border: 1px solid #cbd8dc;
   border-top: 7px solid var(--form-accent);
@@ -381,9 +373,9 @@ a { -webkit-tap-highlight-color: transparent; }
 
 .rating { display: flex; flex-wrap: wrap; gap: 7px; }
 .rating button { width: 43px; height: 43px; border: 1px solid #cbd7db; border-radius: 6px; background: #fff; color: #42575f; font-weight: 900; cursor: pointer; }
-.rating button[aria-pressed="true"] { border-color: var(--form-accent); background: var(--form-accent); color: #fff; }
+.rating button[aria-pressed="true"] { border-color: var(--nrep-primary); background: var(--nrep-primary); color: #fff; }
 
-.information { border-left: 4px solid var(--warning); padding: 12px 14px; background: #fff8e9; color: #584923; line-height: 1.55; }
+.information { border-left: 4px solid var(--nrep-secondary); padding: 12px 14px; background: color-mix(in srgb, var(--nrep-secondary-light) 22%, white); color: #60390c; line-height: 1.55; }
 .consent-box { border: 1px solid #cfdcdf; border-radius: 6px; padding: 15px; background: #f8fbfb; }
 .consent-box h3 { margin: 0 0 8px; font-size: 15px; }
 .consent-box p { max-height: 240px; overflow-y: auto; margin: 0 0 13px; color: #52666e; font-size: 13px; line-height: 1.65; white-space: pre-wrap; }

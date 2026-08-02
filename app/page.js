@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ArrowRight, CalendarClock, FileSearch, Search, ShieldCheck } from "lucide-react"
 import { hrFormsApi } from "@/lib/hr-forms-api"
+import { resolveNrepFormAccent } from "@/lib/nrep-theme.mjs"
 
 export const dynamic = "force-dynamic"
 
@@ -40,7 +41,7 @@ export default async function FormsHomePage({ searchParams }) {
       ) : (
         <>
           <div className="forms-list">
-            {data.documents.map((form) => <article className="form-card" style={{ "--card-accent": form.theme?.accentColor || "#087f8c" }} key={form.id}><div className="form-card__body"><h2>{form.title}</h2><p>{form.description || "Open this form to view its questions and submission details."}</p><div className="form-card__meta"><span><CalendarClock size={15} /> {form.closesAt ? `Closes ${formatDate(form.closesAt)}` : "No closing date"}</span><span><ShieldCheck size={15} /> Secure NREP form</span></div></div><div className="form-card__footer"><Link className="button button--primary" href={`/f/${form.slug}`}>Open form <ArrowRight size={16} /></Link></div></article>)}
+            {data.documents.map((form) => <article className="form-card" style={{ "--card-accent": resolveNrepFormAccent(form.theme?.accentColor) }} key={form.id}><div className="form-card__body"><h2>{form.title}</h2><p>{form.description || "Open this form to view its questions and submission details."}</p><div className="form-card__meta"><span><CalendarClock size={15} /> {form.closesAt ? `Closes ${formatDate(form.closesAt)}` : "No closing date"}</span><span><ShieldCheck size={15} /> Secure NREP form</span></div></div><div className="form-card__footer"><Link className="button button--primary" href={`/f/${form.slug}`}>Open form <ArrowRight size={16} /></Link></div></article>)}
           </div>
           {data.totalPages > 1 && <div className="pager"><span>Page {data.page} of {data.totalPages}</span><div className="pager__buttons">{data.page > 1 && <Link className="button" href={`/?${new URLSearchParams({ ...(q ? { q } : {}), page: String(data.page - 1) })}`}>Previous</Link>}{data.page < data.totalPages && <Link className="button" href={`/?${new URLSearchParams({ ...(q ? { q } : {}), page: String(data.page + 1) })}`}>Next</Link>}</div></div>}
         </>

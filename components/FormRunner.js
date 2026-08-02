@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, ArrowRight, CalendarClock, FileText, LockKeyhole, MapPin, Paperclip, Send, Trash2, TriangleAlert } from "lucide-react"
 import { acceptedFileExtensions, completionPercent, validateClientFiles, validateClientStep } from "@/lib/form-client-rules.mjs"
+import { resolveNrepFormAccent } from "@/lib/nrep-theme.mjs"
 
 function newToken(prefix) {
   return `${prefix}_${globalThis.crypto.randomUUID().replace(/-/g, "")}`.slice(0, 64)
@@ -132,7 +133,7 @@ export default function FormRunner({ form }) {
   const storageKey = useMemo(() => `nrep-form-draft:${form.id}:${form.version.id}`, [form.id, form.version.id])
   const currentStep = steps[stepIndex] || steps[0]
   const finalStep = stepIndex === steps.length - 1
-  const accent = /^#[0-9a-f]{6}$/i.test(form.theme?.accentColor || "") ? form.theme.accentColor : "#087f8c"
+  const accent = resolveNrepFormAccent(form.theme?.accentColor)
 
   useEffect(() => {
     const restoreTimer = window.setTimeout(() => {

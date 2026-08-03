@@ -333,6 +333,59 @@ a { -webkit-tap-highlight-color: transparent; }
 .selected-file button { width: 32px; height: 32px; border: 0; border-radius: 4px; display: grid; place-items: center; background: transparent; color: #a4384a; cursor: pointer; }
 .selected-file button:hover:not(:disabled) { background: #fff0f2; }
 
+.repeatable-list {
+  border-left: 3px solid var(--form-accent);
+  padding-left: 13px;
+}
+
+.repeatable-list--error { border-left-color: var(--danger); }
+.repeatable-list__rows { display: grid; gap: 8px; }
+
+.repeatable-list__row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 8px;
+}
+
+.repeatable-list__number {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--form-accent) 10%, white);
+  color: var(--form-accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.repeatable-list__remove {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #d7e0e3;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: #a4384a;
+  cursor: pointer;
+}
+
+.repeatable-list__remove:hover:not(:disabled) { border-color: #d99ba5; background: #fff0f2; }
+.repeatable-list__remove:disabled { cursor: not-allowed; opacity: .42; }
+
+.repeatable-list__footer {
+  margin-top: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.repeatable-list__footer span { color: #718188; font-size: 11px; font-weight: 700; }
+
 .location-control { border-left: 3px solid var(--form-accent); padding-left: 13px; }
 .location-control--error { border-left-color: var(--danger); }
 .location-control__heading { min-height: 25px; margin-bottom: 8px; display: flex; align-items: center; gap: 7px; color: #61747b; font-size: 11px; font-weight: 800; }
@@ -444,6 +497,11 @@ a { -webkit-tap-highlight-color: transparent; }
   .form-body { padding: 22px 18px; }
   .identity-band { grid-template-columns: 1fr; }
   .location-grid { grid-template-columns: 1fr; }
+  .repeatable-list { padding-left: 10px; }
+  .repeatable-list__row { grid-template-columns: 28px minmax(0, 1fr) 42px; gap: 6px; }
+  .repeatable-list__number { width: 28px; height: 28px; }
+  .repeatable-list__footer { align-items: stretch; flex-direction: column; }
+  .repeatable-list__footer .button { width: 100%; }
   .form-footer { align-items: stretch; flex-direction: column; padding: 14px 18px; }
   .footer-actions { width: 100%; }
   .footer-actions .button { flex: 1; }

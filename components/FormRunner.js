@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ArrowRight, CalendarClock, FileText, LockKeyhole, MapPin, Paperclip, Send, ShieldCheck, Trash2, TriangleAlert, X } from "lucide-react"
+import { ArrowLeft, ArrowRight, CalendarClock, FileText, LockKeyhole, MapPin, Paperclip, Plus, Send, ShieldCheck, Trash2, TriangleAlert, X } from "lucide-react"
 import { acceptedFileExtensions, completionPercent, validateClientFiles, validateClientStep } from "@/lib/form-client-rules.mjs"
 import { resolveNrepFormAccent } from "@/lib/nrep-theme.mjs"
 
@@ -93,6 +93,50 @@ function AdministrativeLocationControl({ formSlug, field, value, error, disabled
   return <div className={`location-control${error ? " location-control--error" : ""}`}><div className="location-control__heading"><MapPin size={16} /><span>Select each available administrative level</span>{loading && <span className="spinner" />}</div><div className="location-grid">{levels.map((level, index) => <label key={`${level.level}-${index}`}><span>{level.label}</span><select className="select" value={path[index]?.code || ""} disabled={disabled || loading} onChange={(event) => selectLevel(index, event.target.value)}><option value="">Select {level.label.toLocaleLowerCase()}</option>{level.options.map((item) => <option value={item.code} key={item.code}>{item.name}</option>)}</select></label>)}</div>{loadError && <p className="field-error">{loadError}</p>}</div>
 }
 
+function RepeatableListControl({ field, value, error, disabled, onChange }) {
+  const values = Array.isArray(value) ? value : []
+  const minimumItems = Math.max(field.required ? 1 : 0, Number(field.min) || 0)
+  const minimumRows = Math.max(1, Math.min(50, minimumItems))
+  const maximumItems = Math.max(minimumRows, Math.min(50, Number(field.max) || 10))
+  const visibleValues = values.length ? values.slice(0, 50) : Array.from({ length: minimumRows }, () => "")
+  const [rowIds, setRowIds] = useState(() => Array.from({ length: 50 }, () => newToken("list_item")))
+
+  function updateItem(index, nextValue) {
+    const next = [...visibleValues]
+    next[index] = nextValue
+    onChange(next)
+  }
+
+  function addItem() {
+    if (visibleValues.length >= maximumItems) return
+    onChange([...visibleValues, ""])
+  }
+
+  function removeItem(index) {
+    if (visibleValues.length <= minimumRows) return
+    setRowIds((current) => [...current.slice(0, index), ...current.slice(index + 1), newToken("list_item")])
+    onChange(visibleValues.filter((_, itemIndex) => itemIndex !== index))
+  }
+
+  return (
+    <div className={`repeatable-list${error ? " repeatable-list--error" : ""}`}>
+      <div className="repeatable-list__rows">
+        {visibleValues.map((item, index) => (
+          <div className="repeatable-list__row" key={rowIds[index]}>
+            <span className="repeatable-list__number" aria-hidden="true">{index + 1}</span>
+            <input className={`input${error ? " input--error" : ""}`} type="text" value={item} maxLength={field.maxLength || 500} placeholder={field.placeholder || "Enter an item"} disabled={disabled} aria-label={`${field.label}, item ${index + 1}`} onChange={(event) => updateItem(index, event.target.value)} />
+            <button className="repeatable-list__remove" type="button" title={`Remove item ${index + 1}`} aria-label={`Remove item ${index + 1}`} disabled={disabled || visibleValues.length <= minimumRows} onClick={() => removeItem(index)}><Trash2 size={16} /></button>
+          </div>
+        ))}
+      </div>
+      <div className="repeatable-list__footer">
+        <button className="button" type="button" disabled={disabled || visibleValues.length >= maximumItems} onClick={addItem}><Plus size={16} /> Add item</button>
+        <span>{visibleValues.length >= maximumItems ? `Maximum ${maximumItems} items reached` : `Up to ${maximumItems} items`}</span>
+      </div>
+    </div>
+  )
+}
+
 function ConsentAcceptance({ title, text, version, required, checked, error, disabled, onChange }) {
   const identifier = useId().replace(/:/g, "")
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -152,6 +196,7 @@ function FieldControl({ formSlug, field, value, files, error, disabled, onChange
   const errorClass = error ? " input--error" : ""
   if (field.type === "information") return <div className="information">{field.description || field.label}</div>
   if (field.type === "long_text") return <textarea className={`textarea${errorClass}`} value={value || ""} maxLength={field.maxLength || 4000} placeholder={field.placeholder} disabled={disabled} onChange={(event) => onChange(event.target.value)} aria-invalid={Boolean(error)} />
+  if (field.type === "repeatable_list") return <RepeatableListControl field={field} value={value} error={error} disabled={disabled} onChange={onChange} />
   if (["single_choice", "multiple_choice"].includes(field.type)) {
     const multiple = field.type === "multiple_choice"
     const values = multiple && Array.isArray(value) ? value : []

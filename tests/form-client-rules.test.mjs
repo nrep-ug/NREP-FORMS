@@ -47,3 +47,20 @@ test("location validation requires the configured hierarchy to be complete", () 
   assert.match(validateClientField(field, { path: [{ level: "country", code: "UG", name: "Uganda" }], complete: false }), /complete/i)
   assert.equal(validateClientField(field, { path: [{ level: "country", code: "UG", name: "Uganda" }], complete: true }), "")
 })
+
+test("repeatable lists enforce item count and per-item length", () => {
+  const field = {
+    type: "repeatable_list",
+    label: "Activities",
+    required: true,
+    min: 2,
+    max: 3,
+    maxLength: 12,
+  }
+  assert.match(validateClientField(field, ["Planning"]), /at least 2 items/i)
+  assert.equal(validateClientField(field, ["Planning", "Delivery", ""]), "")
+  assert.match(validateClientField(field, ["One", "Two", "Three", "Four"]), /no more than 3 items/i)
+  assert.match(validateClientField(field, ["Planning", "This item is too long"]), /12 characters/i)
+  assert.match(validateClientField(field, "Planning"), /list of items/i)
+  assert.match(validateClientField({ ...field, max: 50, maxLength: 2000 }, Array.from({ length: 5 }, () => "x".repeat(1600))), /combined content is too long/i)
+})

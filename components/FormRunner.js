@@ -234,13 +234,14 @@ export default function FormRunner({ form }) {
   const currentStep = steps[stepIndex] || steps[0]
   const finalStep = stepIndex === steps.length - 1
   const accent = resolveNrepFormAccent(form.theme?.accentColor)
+  const collectName = form.collectName !== false
 
   useEffect(() => {
     const restoreTimer = window.setTimeout(() => {
       const stored = storedDraft(storageKey)
       const sessionId = stored?.clientSessionId || newToken("session")
       setAnswers(stored?.answers || {})
-      setRespondentName(stored?.respondentName || "")
+      setRespondentName(collectName ? stored?.respondentName || "" : "")
       setRespondentEmail(stored?.respondentEmail || "")
       setConsents(stored?.consents || { general: false, form: false })
       setStepIndex(Math.min(Number(stored?.stepIndex) || 0, Math.max(0, steps.length - 1)))
@@ -258,15 +259,15 @@ export default function FormRunner({ form }) {
       }
     }, 0)
     return () => window.clearTimeout(restoreTimer)
-  }, [form.slug, steps.length, storageKey])
+  }, [collectName, form.slug, steps.length, storageKey])
 
   useEffect(() => {
     if (!hydrated || !clientSessionId) return
     const timeout = setTimeout(() => localStorage.setItem(storageKey, JSON.stringify({
-      answers, respondentName, respondentEmail, consents, stepIndex, clientSessionId, idempotencyKey, startedAt, startedEvent: true,
+      answers, respondentName: collectName ? respondentName : "", respondentEmail, consents, stepIndex, clientSessionId, idempotencyKey, startedAt, startedEvent: true,
     })), 250)
     return () => clearTimeout(timeout)
-  }, [answers, clientSessionId, consents, hydrated, idempotencyKey, respondentEmail, respondentName, startedAt, stepIndex, storageKey])
+  }, [answers, clientSessionId, collectName, consents, hydrated, idempotencyKey, respondentEmail, respondentName, startedAt, stepIndex, storageKey])
 
   function setAnswer(fieldId, value) {
     setAnswers((current) => ({ ...current, [fieldId]: value }))
@@ -372,7 +373,7 @@ export default function FormRunner({ form }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           answers: submittedAnswers,
-          respondentName,
+          respondentName: collectName ? respondentName : "",
           respondentEmail,
           consents,
           website,
@@ -411,7 +412,7 @@ export default function FormRunner({ form }) {
         <div className="form-body">
           {submitError && <div className="alert"><TriangleAlert size={18} /><span>{submitError}</span></div>}
           {uploadProgress && <div className="upload-progress" role="status"><span className="spinner" /><span><strong>Uploading attachments {uploadProgress.completed} of {uploadProgress.total}</strong><small>{uploadProgress.fileName}</small></span></div>}
-          {stepIndex === 0 && <div className="identity-band"><div className="field"><label className="field-label" htmlFor="respondent-name">Your name</label><input id="respondent-name" className="input" value={respondentName} onChange={(event) => setRespondentName(event.target.value)} autoComplete="name" /></div>{form.collectEmail && <div className="field"><label className="field-label" htmlFor="respondent-email">Email <span className="required">*</span></label><input id="respondent-email" className={`input${errors.respondentEmail ? " input--error" : ""}`} type="email" value={respondentEmail} onChange={(event) => { setRespondentEmail(event.target.value); setErrors((current) => ({ ...current, respondentEmail: undefined })) }} autoComplete="email" aria-invalid={Boolean(errors.respondentEmail)} />{errors.respondentEmail && <p className="field-error">{errors.respondentEmail}</p>}</div>}</div>}
+          {stepIndex === 0 && (collectName || form.collectEmail) && <div className="identity-band">{collectName && <div className="field"><label className="field-label" htmlFor="respondent-name">Your name</label><input id="respondent-name" className="input" value={respondentName} onChange={(event) => setRespondentName(event.target.value)} autoComplete="name" /></div>}{form.collectEmail && <div className="field"><label className="field-label" htmlFor="respondent-email">Email <span className="required">*</span></label><input id="respondent-email" className={`input${errors.respondentEmail ? " input--error" : ""}`} type="email" value={respondentEmail} onChange={(event) => { setRespondentEmail(event.target.value); setErrors((current) => ({ ...current, respondentEmail: undefined })) }} autoComplete="email" aria-invalid={Boolean(errors.respondentEmail)} />{errors.respondentEmail && <p className="field-error">{errors.respondentEmail}</p>}</div>}</div>}
           <section>
             {(form.layout === "steps" || steps.length > 1) && <h2 className="step-title">{currentStep.title}</h2>}
             {currentStep.description && <p className="step-description">{currentStep.description}</p>}
